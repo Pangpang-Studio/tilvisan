@@ -12,8 +12,6 @@ use crate::{
 use std::io::{self, Read};
 
 pub fn autohint(args: &Args) -> Result<Vec<u8>, AutohintError> {
-    let input_file = &args.input;
-
     // Read input file
     let in_buf: Vec<u8> = if args.input == "-" {
         let mut buf = Vec::new();
@@ -33,6 +31,15 @@ pub fn autohint(args: &Args) -> Result<Vec<u8>, AutohintError> {
     // Read reference file if provided
     let reference_buf: Option<Vec<u8>> = args.reference.as_ref().map(std::fs::read).transpose()?;
 
+    autohint_from_bufs(args, &in_buf, control_buf.as_deref(), reference_buf)
+}
+
+pub fn autohint_from_bufs(
+    args: &Args,
+    in_buf: &[u8],
+    control_buf: Option<&str>,
+    reference_buf: Option<Vec<u8>>,
+) -> Result<Vec<u8>, AutohintError> {
     // Validate input sizes
     if in_buf.len() < 100 {
         return Err(AutohintError::ValidationError("Font too small".to_string()));
@@ -51,7 +58,7 @@ pub fn autohint(args: &Args) -> Result<Vec<u8>, AutohintError> {
 
     // Create InfoData
     let idata = InfoData::from_args(args)
-        .unwrap_or_else(|e| panic!("Failed to construct info data for {input_file:?}: {e}"));
+        .unwrap_or_else(|e| panic!("Failed to construct info data for {:?}: {e}", args.input));
 
     // Parse control entries
     let control_entries: Vec<ResolvedControlEntry> = if let Some(control_text) = &control_buf {
@@ -67,7 +74,7 @@ pub fn autohint(args: &Args) -> Result<Vec<u8>, AutohintError> {
     };
 
     // Create and initialize Font
-    let fontref = skrifa::FontRef::new(&in_buf)?;
+    let fontref = skrifa::FontRef::new(in_buf)?;
     let mut font = Font::new(fontref)?;
     font.args = args.clone();
     font.progress = None;

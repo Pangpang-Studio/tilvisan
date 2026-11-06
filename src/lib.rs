@@ -27,7 +27,7 @@ mod variations;
 pub use args::Args;
 pub use error::AutohintError;
 pub use info::{build_version_string, InfoData};
-pub use orchestrate::autohint;
+pub use orchestrate::{autohint, autohint_from_bufs};
 pub use scripts::ScriptClassIndex;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
